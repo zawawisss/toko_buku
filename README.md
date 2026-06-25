@@ -1,75 +1,99 @@
-# React + TypeScript + Vite
+# Toko Buku - Fullstack App (React + Go + PostgreSQL)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplikasi Toko Buku sederhana yang dibangun menggunakan arsitektur fullstack modern. Data buku tersimpan secara permanen di database PostgreSQL yang berjalan di dalam Docker, diakses menggunakan API Backend berbahasa Go (Gin), dan ditampilkan menggunakan Frontend React (Vite + TypeScript).
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🌟 Fitur Utama (CRUD)
+* **Read (Tampil Buku)**: Menampilkan kartu buku lengkap dengan judul, penulis, harga, dan stok yang diambil langsung dari database.
+* **Create (Tambah Buku)**: Menambahkan buku baru ke database melalui formulir input dinamis secara real-time.
+* **Update (Beli Buku)**: Mengurangi stok buku secara langsung di database saat tombol "Beli" diklik (data persisten saat refresh).
+* **Delete (Hapus Buku)**: Menghapus buku secara permanen dari database dan langsung memperbarui tampilan tanpa reload halaman.
 
-## React Compiler
+---
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## 🛠️ Tech Stack
+* **Frontend**: React 19, TypeScript, Vite, React Compiler, Vanilla CSS.
+* **Backend**: Go (Golang) 1.22+, Gin Web Framework, `database/sql` standard library, `lib/pq` (driver Postgres).
+* **Database**: PostgreSQL 16 (berjalan di dalam Docker Compose).
+* **Configuration**: `godotenv` untuk mengelola environment variables secara aman.
 
-Note: This will impact Vite dev & build performances.
+---
 
-## Expanding the ESLint configuration
+## 📊 Alur Kerja Aplikasi
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+```mermaid
+graph TD
+    subgraph Frontend (React - Port 5173/5174)
+        App[App.tsx] -->|Render| BookCard[BookCard.tsx]
+        App -->|Submit Form| Form[Form Input]
+        App -->|API Request| Fetch[Fetch API]
+    end
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+    subgraph Backend (Go - Port 8080)
+        Fetch -->|GET/POST/PUT/DELETE| Gin[Gin Router]
+        Gin -->|CORS Check| Cors[CORS Middleware]
+        Cors -->|SQL Query| DB[Postgres Docker]
+    end
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🚀 Panduan Menjalankan Proyek
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Pastikan laptop Anda sudah terinstall **Docker**, **Go**, dan **Node.js**.
+
+### LINGKUNGAN DATABASE (Docker)
+1. Masuk ke PostgreSQL lokal kamu dan buat databasenya sekali saja:
+   ```bash
+   sudo -u postgres psql
+   # Di dalam psql run:
+   CREATE DATABASE toko_buku;
+   CREATE USER awi WITH PASSWORD 'awi';
+   GRANT ALL PRIVILEGES ON DATABASE toko_buku TO awi;
+   \q
+   ```
+2. Pastikan servis Postgres lokal laptop mati agar tidak bentrok port:
+   ```bash
+   sudo systemctl stop postgresql
+   ```
+
+### 1. Setup & Jalankan Backend (Go)
+1. Masuk ke folder backend:
+   ```bash
+   cd backend
+   ```
+2. Buat file `.env` di dalam folder `backend/` dan sesuaikan nilainya:
+   ```env
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_USER=awi
+   DB_PASSWORD=awi
+   DB_NAME=toko_buku
+   ```
+3. Jalankan Postgres di Docker:
+   ```bash
+   docker compose up -d
+   ```
+4. Jalankan server Go:
+   ```bash
+   go run main.go
+   ```
+   *Server Go akan berjalan di `http://localhost:8080` dan otomatis melakukan inisialisasi tabel serta memasukkan data awal jika database masih kosong.*
+
+### 2. Setup & Jalankan Frontend (React)
+1. Buka terminal baru di root folder proyek (`toko_buku/`).
+2. Install dependensi package Node:
+   ```bash
+   npm install
+   ```
+3. Jalankan aplikasi Vite:
+   ```bash
+   npm run dev
+   ```
+4. Buka alamat localhost yang tertera di terminal (biasanya `http://localhost:5173`) di browser Anda.
+
+---
+
+## 🔒 Catatan Keamanan
+File `backend/.env` berisi password rahasia database kamu dan **tidak akan ikut ter-upload ke GitHub** karena sudah didaftarkan di dalam file `.gitignore`.
