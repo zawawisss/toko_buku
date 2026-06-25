@@ -1,0 +1,14 @@
+services:
+      db:
+        image: postgres:16-alpine
+        container_name: tokobuku-db
+        environment:
+          POSTGRES_USER: awi
+          POSTGRES_PASSWORD: awi
+          POSTGRES_DB: toko_buku
+        ports:
+          - "5432:5432"
+        volumes:
+          - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
